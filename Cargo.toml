@@ -12,7 +12,8 @@ edition = "2018"
 autobenches = false
 
 [features]
-default = []
+# default = []
+default = ["backend-mmap"]
 backend-bitmap = []
 backend-mmap = []
 backend-atomic = ["arc-swap"]

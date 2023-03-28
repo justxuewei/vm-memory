@@ -41,6 +41,8 @@ pub use crate::mmap_windows::MmapRegion;
 pub use std::io::Error as MmapRegionError;
 
 /// A `Bitmap` that can be created starting from an initial size.
+/// Xuewei: NewBitmap 的作用是为 Bitmap 添加了一个创建方法 `with_len()`，它能够
+/// 为 Bitmap 设置一个初始化的长度。
 pub trait NewBitmap: Bitmap + Default {
     /// Create a new object based on the specified length in bytes.
     fn with_len(len: usize) -> Self;
@@ -142,6 +144,7 @@ pub fn check_file_offset(
 ///
 /// Represents a continuous region of the guest's physical memory that is backed by a mapping
 /// in the virtual address space of the calling process.
+/// Xuewei: 根据 new() 方法来看，GuestRegionMmap 就是
 #[derive(Debug)]
 pub struct GuestRegionMmap<B = ()> {
     mapping: MmapRegion<B>,
@@ -158,6 +161,7 @@ impl<B> Deref for GuestRegionMmap<B> {
 
 impl<B: Bitmap> GuestRegionMmap<B> {
     /// Create a new memory-mapped memory region for the guest's physical memory.
+    /// Xuewei: 检查了是否溢出，随后包装到 GuestRegionMmap 返回
     pub fn new(mapping: MmapRegion<B>, guest_base: GuestAddress) -> result::Result<Self, Error> {
         if guest_base.0.checked_add(mapping.size() as u64).is_none() {
             return Err(Error::InvalidGuestRegion);

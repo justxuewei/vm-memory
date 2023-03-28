@@ -99,6 +99,10 @@ impl<B: Bitmap> MmapRegionBuilder<B> {
     /// When instantiating the builder for a region that does not require dirty bitmap
     /// bitmap tracking functionality, we can specify a trivial `Bitmap` implementation
     /// such as `()`.
+    /// Xuewei: 这个函数对 MmapRegionBuilder 做了相对初步的初始化，初始化的内容包括：
+    /// - size: bitmap 的 size
+    /// - flags: MAP_ANONYMOUS + PRIVATE
+    /// - bitmap: 一个 bitmap 实例
     pub fn new_with_bitmap(size: usize, bitmap: B) -> Self {
         MmapRegionBuilder {
             size,
@@ -147,6 +151,8 @@ impl<B: Bitmap> MmapRegionBuilder<B> {
     }
 
     /// Build the `MmapRegion` object.
+    /// Xuewei: 对参数进行一系列的检查，调用 mmap() 系统调用创建 mmap，最后将各
+    /// 种参数封装到 MmapRegion 中，返回。
     pub fn build(self) -> Result<MmapRegion<B>> {
         if self.raw_ptr.is_some() {
             return self.build_raw();
@@ -226,8 +232,11 @@ impl<B: Bitmap> MmapRegionBuilder<B> {
 /// When running a 64-bit virtual machine on a 32-bit hypervisor, only part of the guest's
 /// physical memory may be mapped into the current process due to the limited virtual address
 /// space size of the process.
+/// Xuewei: Rust 语法 `<B = ()>` 表示泛型 B 默认初始化类型为 ()，这样在使用
+/// MmapRegion 的时候就不必要显式的指出泛型类型。
 #[derive(Debug)]
 pub struct MmapRegion<B = ()> {
+    // Xuewei: 映射内存的起始地址
     addr: *mut u8,
     size: usize,
     bitmap: B,
@@ -252,7 +261,9 @@ impl<B: NewBitmap> MmapRegion<B> {
     /// * `size` - The size of the memory region in bytes.
     pub fn new(size: usize) -> Result<Self> {
         MmapRegionBuilder::new_with_bitmap(size, B::with_len(size))
+            // Xuewei: 权限是可读可写
             .with_mmap_prot(libc::PROT_READ | libc::PROT_WRITE)
+            // Xuewei: 映射是匿名的、不需要保留交换空间的、私有的
             .with_mmap_flags(libc::MAP_ANONYMOUS | libc::MAP_NORESERVE | libc::MAP_PRIVATE)
             .build()
     }
@@ -281,6 +292,7 @@ impl<B: NewBitmap> MmapRegion<B> {
     /// * `flags` - This argument determines whether updates to the mapping are visible to other
     ///             processes mapping the same region, and whether updates are carried through to
     ///             the underlying file.
+    /// Xuewei: 
     pub fn build(
         file_offset: Option<FileOffset>,
         size: usize,

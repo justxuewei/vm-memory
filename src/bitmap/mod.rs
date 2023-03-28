@@ -34,7 +34,10 @@ pub trait BitmapSlice: Bitmap + Clone + Debug + for<'a> WithBitmapSlice<'a, S = 
 /// as a zero-cost abstraction when providing trivial implementations such as the one
 /// defined for `()`.
 // These methods represent the core functionality that's required by `vm-memory` abstractions
-// to implement generic tracking logic, as well as tests that can be reused by different backends.
+// to implement generic tracking logic, as well as tests that can be reused by
+// different backends.
+// Xuewei: Bitmap 规定了一系列的操作，在 backend 这个 crate 中又定义了
+// BaseSlice, AtmoicBitmap, AtomicBitmapArc，他们均实现了 Bitmap。
 pub trait Bitmap: for<'a> WithBitmapSlice<'a> {
     /// Mark the memory range specified by the given `offset` and `len` as dirtied.
     fn mark_dirty(&self, offset: usize, len: usize);
